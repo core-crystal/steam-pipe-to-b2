@@ -1,7 +1,10 @@
 # `Initialize-Variable` will attempt to load a variable from the environment if it is not set in the current context.
 function Initialize-Variable([string]$var_name, [bool]$non_empty) {
   if ([string]::IsNullOrWhiteSpace((Get-Variable -Name $var_name -ValueOnly))) {
-    Set-Variable -Name "$var_name" -Value [System.Environment]::GetEnvironmentVariable($var_name) -scope global
+    $env=[System.Environment]::GetEnvironmentVariable($var_name)
+    if (![string]::IsNullOrWhiteSpace($env)) {
+      Set-Variable -Name "$var_name" -Value "$env" -scope global
+    }
   }
   if ($non_empty) {
     if ([string]::IsNullOrWhiteSpace((Get-Variable -Name $var_name -ValueOnly))) {
