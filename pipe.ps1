@@ -78,7 +78,7 @@ if ([string]::IsNullOrWhiteSpace($STEAM_ARCH)) {
 # If the directory for this depot exists, lets remove any pre-existing manifest, and take
 # note of any manfiests we know about.
 if (Test-Path -Path "./depots/$STEAM_DEPOT_ID") {
-  $PreExistingManifestFiles = (Get-ChildItem -Path "./depots/$DEPOT_ID" -Filter manifest_* -Recurse | ForEach-Object{$_.FullName}).Split([Environment]::NewLine)
+  $PreExistingManifestFiles = (Get-ChildItem -Path "./depots/$STEAM_DEPOT_ID" -Filter manifest_* -Recurse | ForEach-Object{$_.FullName}).Split([Environment]::NewLine)
   foreach ($ManifestFile in $PreExistingManifestFiles) {
     rm $ManifestFile
   }
@@ -114,7 +114,7 @@ if ($PostExistingManifestFiles.Count -eq 0) {
       $MsgBody=(@{
         username = "Steam Pipe to B2";
         avatar_url = "https://c.reml.ink/images/icons/steam-pretty-icon.jpg";
-        content = "[a:${STEAM_APP_ID},d:${STEAM_DEPOT_ID}] <@&${DISCORD_MAINTENANCE_ROLE_ID}> Failed to fetch the manifest file, this usually means one of the following three things happened:\n  1. Your steam credentials have expired.\n  2. Steam is having issues (this is common on tuesdays when Steam does maintenance).\n  3. The App ID/Depot ID do not exist anymore.\n\nCommand Output:\n\`\`\`\n$manifestOutput\n\`\`\` "
+        content = "[a:${STEAM_APP_ID},d:${STEAM_DEPOT_ID}] <@&${DISCORD_MAINTENANCE_ROLE_ID}> Failed to fetch the manifest file, this usually means one of the following three things happened:`n  1. Your steam credentials have expired.`n  2. Steam is having issues (this is common on tuesdays when Steam does maintenance).`n  3. The App ID/Depot ID do not exist anymore.`n`nCommand Output:`n```````n$manifestOutput`n``````"
       } | ConvertTo-Json -Depth 5 -EscapeHandling Default)
       Invoke-WebRequest -Uri "$DISCORD_WEBHOOK" -Method POST -Headers @{ "Content-Type" = "application/json" } -Body "$MsgBody"
     }
@@ -140,7 +140,7 @@ if (!$PreExistingManifestFiles.contains($PostExistingManifestFiles[0])) {
     $MsgBody=(@{
       username = "Steam Pipe to B2";
       avatar_url = "https://c.reml.ink/images/icons/steam-pretty-icon.jpg";
-      content = "[a:${STEAM_APP_ID},d:${STEAM_DEPOT_ID}] <@&${DISCORD_UPDATE_ROLE_ID}> Foud a new manifest file, \` ${PostExistingManifestFiles[0]} \`, Starting a Download."
+      content = "[a:${STEAM_APP_ID},d:${STEAM_DEPOT_ID}] <@&${DISCORD_UPDATE_ROLE_ID}> Foud a new manifest file, ``${PostExistingManifestFiles}``, Starting a Download."
     } | ConvertTo-Json -Depth 5 -EscapeHandling Default)
     Invoke-WebRequest -Uri "$DISCORD_WEBHOOK" -Method POST -Headers @{ "Content-Type" = "application/json" } -Body "$MsgBody"
   }
@@ -149,16 +149,16 @@ if (!$PreExistingManifestFiles.contains($PostExistingManifestFiles[0])) {
   dotnet @DepotArgList -validate
 
   # Now we need to actually upload it if we downloaded anything.
-  Set-Location "./depots/$DEPOT_ID"
+  Set-Location "depots/$STEAM_DEPOT_ID"
   $directory_counts=(Get-ChildItem -Directory | Measure-Object)
-  Set-Location './../../'
+  Set-Location "../../"
   $PostExistingFolderCount=$directory_counts.Count
   # There will be two folders that exist (the previously downloaded version, and now the new version).
   if ($PostExistingFolderCount -ne 1) {
     # Get the latest directory created since we 'fetched the full game' last.
     #
     # The directory itself will be the build id name.
-    $latestDirObj=(Get-ChildItem "./depots/$DEPOT_ID" | Sort-Object CreationTime -Descending | Select-Object -First 1)
+    $latestDirObj=(Get-ChildItem "./depots/$STEAM_DEPOT_ID" | Sort-Object CreationTime -Descending | Select-Object -First 1)
     $buildId=$latestDirObj.Name
     # build id prefix defaults to 's' for 'stable'
     $bidPrefix="s"
@@ -170,22 +170,22 @@ if (!$PreExistingManifestFiles.contains($PostExistingManifestFiles[0])) {
       $MsgBody=(@{
         username = "Steam Pipe to B2";
         avatar_url = "https://c.reml.ink/images/icons/steam-pretty-icon.jpg";
-        content = "[a:${STEAM_APP_ID},d:${STEAM_DEPOT_ID}] <@&${DISCORD_UPDATE_ROLE_ID}> Starting Upload of build id: \` ${bidPrefix}${buildID} \`."
+        content = "[a:${STEAM_APP_ID},d:${STEAM_DEPOT_ID}] <@&${DISCORD_UPDATE_ROLE_ID}> Starting Upload of build id: ``${bidPrefix}${buildID}``."
       } | ConvertTo-Json -Depth 5 -EscapeHandling Default)
       Invoke-WebRequest -Uri "$DISCORD_WEBHOOK" -Method POST -Headers @{ "Content-Type" = "application/json" } -Body "$MsgBody"
     }
     # Actually perform the synchronization.
-    b2 sync "./depots/$DEPOT_ID/${buildId}/" "b2://${B2_BUCKET_NAME}/${bidPrefix}${buildId}/"
+    b2 sync "./depots/$STEAM_DEPOT_ID/${buildId}/" "b2://${B2_BUCKET_NAME}/${bidPrefix}${buildId}/"
 
     # Remove the older version of the game (so we only have a max of 2 at a time).
-    $oldest_dir_name=(Get-ChildItem "./depots/$DEPOT_ID" | Sort-Object CreationTime | Select-Object -First 1)
-    rm -r "./depots/${DEPOT_ID}/${oldest_dir_name.Name}"
+    $oldest_dir_name=(Get-ChildItem "./depots/$STEAM_DEPOT_ID" | Sort-Object CreationTime | Select-Object -First 1)
+    rm -r "./depots/${STEAM_DEPOT_ID}/${oldest_dir_name.Name}"
     
     if (!$DISCORD_SILENCED) {
       $MsgBody=(@{
         username = "Steam Pipe to B2";
         avatar_url = "https://c.reml.ink/images/icons/steam-pretty-icon.jpg";
-        content = "[a:${STEAM_APP_ID},d:${STEAM_DEPOT_ID}] <@&${DISCORD_UPDATE_ROLE_ID}> Finished Archival of build id: \` ${bidPrefix}${buildID} \`."
+        content = "[a:${STEAM_APP_ID},d:${STEAM_DEPOT_ID}] <@&${DISCORD_UPDATE_ROLE_ID}> Finished Archival of build id: ``${bidPrefix}${buildID}``."
       } | ConvertTo-Json -Depth 5 -EscapeHandling Default)
       Invoke-WebRequest -Uri "$DISCORD_WEBHOOK" -Method POST -Headers @{ "Content-Type" = "application/json" } -Body "$MsgBody"
     }
