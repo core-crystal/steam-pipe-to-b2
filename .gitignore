@@ -1,0 +1,5 @@
+/depots/
+/.env
+/last-output.txt
+/last-was-error.txt
+/DepotDownloader.dll
