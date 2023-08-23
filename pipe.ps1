@@ -178,8 +178,9 @@ if (!$PreExistingManifestFiles.contains($PostExistingManifestFiles[0])) {
     b2 sync "./depots/$STEAM_DEPOT_ID/${buildId}/" "b2://${B2_BUCKET_NAME}/${bidPrefix}${buildId}/"
 
     # Remove the older version of the game (so we only have a max of 2 at a time).
-    $oldest_dir_name=(Get-ChildItem "./depots/$STEAM_DEPOT_ID" | Sort-Object CreationTime | Select-Object -First 1)
-    rm -r "./depots/${STEAM_DEPOT_ID}/${oldest_dir_name.Name}"
+    $oldestDirObj=(Get-ChildItem "./depots/$STEAM_DEPOT_ID" | Sort-Object CreationTime | Select-Object -First 1)
+    $oldBID=$oldestDirObj.Name
+    rm -r "./depots/${STEAM_DEPOT_ID}/${oldBID}"
     
     if (!$DISCORD_SILENCED) {
       $MsgBody=(@{
