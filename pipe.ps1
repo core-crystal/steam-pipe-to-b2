@@ -114,7 +114,7 @@ if ($PostExistingManifestFiles.Count -eq 0) {
       $MsgBody=(@{
         username = "Steam Pipe to B2";
         avatar_url = "https://c.reml.ink/images/icons/steam-pretty-icon.jpg";
-        content = "[a:${STEAM_APP_ID},d:${STEAM_DEPOT_ID}] <@&${DISCORD_MAINTENANCE_ROLE_ID}> Failed to fetch the manifest file, this usually means one of the following three things happened:`n  1. Your steam credentials have expired.`n  2. Steam is having issues (this is common on tuesdays when Steam does maintenance).`n  3. The App ID/Depot ID do not exist anymore.`n`nCommand Output:`n```````n$manifestOutput`n``````"
+        content = "[a:${STEAM_APP_ID},d:${STEAM_DEPOT_ID}] <@&${DISCORD_MAINTENANCE_ROLE_ID}> Failed to fetch the manifest file, this usually means one of the following three things happened:`n1. Your steam credentials have expired.`n2. Steam is having issues (this is common on tuesdays when Steam does maintenance).`n3. The App ID/Depot ID do not exist anymore.`n`nCommand Output:`n```````n$manifestOutput`n``````"
       } | ConvertTo-Json -Depth 5 -EscapeHandling Default)
       Invoke-WebRequest -Uri "$DISCORD_WEBHOOK" -Method POST -Headers @{ "Content-Type" = "application/json" } -Body "$MsgBody"
     }
